@@ -33,7 +33,7 @@ class Reader(multiprocessing.Process):
                 if self.demo:
                     active = int(time.monotonic()-started) % 12 < 8
                     fwd = 25 + math.sin(time.monotonic()) if active else 0
-                    self.emit('reading', ((fwd,.15,1.17) if active else (0,0,0), '0;0;0;0;0', '--', 'SIMULATION', count, 0, 0, time.monotonic()))
+                    self.emit('reading', ((fwd,.15,1.17) if active else (0,0,0), '0;0;0;0;0', '--', 'SIMULATION', count, 0, 0, time.time()))
                     count += 1
                     self.stop_event.wait(.2)
                     continue
@@ -60,7 +60,7 @@ class Reader(multiprocessing.Process):
                                 else:
                                     last = time.monotonic()
                                     count += 1
-                                    self.emit('reading',(values,flags,crc,raw,count,parser.bad,parser.crc_bad,time.monotonic()))
+                                    self.emit('reading',(values,flags,crc,raw,count,parser.bad,parser.crc_bad,time.time()))
                             self.emit('counts',(parser.bad,parser.crc_bad))
                 except Exception as exc:
                     self.emit('status','Reconnecting')

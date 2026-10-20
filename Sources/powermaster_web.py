@@ -73,7 +73,7 @@ class Controller:
     def telemetry(self):
         state=self.snapshot()
         age=state['age']
-        live=state['status']=='Live' and age is not None and age<5
+        live=state['status']=='Live' and age is not None and age<2
         values=state['values']
         return dict(schema_version=1,meter_id='powermaster-ii',model='PowerMaster II',
                     sequence=state['frames'],timestamp=None if age is None else time.time()-age,
@@ -93,7 +93,7 @@ class Controller:
             elif kind=='status':self.state['status']=data
             elif kind=='notice':self.state['notice']=data
             elif kind=='counts':self.state.update(malformed=data[0],crc_failures=data[1])
-        return dict(self.state,age=None if self.last is None else time.monotonic()-self.last,ports=ports(),connected=self.worker is not None,share_readings=self.share_readings)
+        return dict(self.state,age=None if self.last is None else max(0,time.time()-self.last),ports=ports(),connected=self.worker is not None,share_readings=self.share_readings)
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)

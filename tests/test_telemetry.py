@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import json,pathlib,subprocess,sys,tempfile,time,unittest,urllib.request,urllib.error,signal
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/'Sources'))
 from powermaster_web import Controller
@@ -14,7 +15,7 @@ class TelemetryTests(unittest.TestCase):
    try:
     self.assertFalse(c.share_readings)
     c.set_sharing(True);self.assertTrue(json.loads(path.read_text())['share_readings'])
-    c.events.put(('reading',((25,.15,1.17),'0;0;0;0;0','59','test',1,0,0,time.monotonic()-10)))
+    c.events.put(('reading',((25,.15,1.17),'0;0;0;0;0','59','test',1,0,0,time.time()-10)))
     time.sleep(.05)
     self.assertEqual(c.telemetry()['status'],'disconnected')
     self.assertIsNone(c.telemetry()['forward_watts'])
@@ -23,16 +24,26 @@ class TelemetryTests(unittest.TestCase):
    c=Controller(path)
    try:self.assertTrue(c.share_readings)
    finally:c.disconnect()
- def test_normal_idle_frame_gap_stays_live_but_stopped_feed_expires(self):
+ def test_shared_wall_clock_freshness_and_stale_expiry(self):
   with tempfile.TemporaryDirectory() as directory:
    c=Controller(pathlib.Path(directory)/'settings.json')
    try:
     c.worker=Mock();c.worker.is_alive.return_value=False
-    c.state.update(status='Live',values=[0,0,0]);c.last=time.monotonic()-3
+    c.state.update(status='Live',values=[0,0,0]);c.last=time.time()-.3
     self.assertEqual(c.telemetry()['status'],'live')
-    c.last=time.monotonic()-6
+    c.last=time.time()-3
     self.assertEqual(c.telemetry()['status'],'stale')
     self.assertIsNone(c.telemetry()['forward_watts'])
+   finally:c.disconnect()
+ def test_reader_event_age_ignores_process_local_monotonic_origin(self):
+  with tempfile.TemporaryDirectory() as directory:
+   c=Controller(pathlib.Path(directory)/'settings.json')
+   try:
+    c.events.put(('reading',((0,0,0),'flags','crc','frame',1,0,0,time.time())))
+    time.sleep(.05)
+    with patch('powermaster_web.time',SimpleNamespace(time=time.time,monotonic=lambda:9999999)):
+     data=c.telemetry()
+    self.assertEqual(data['status'],'live');self.assertLess(data['age_seconds'],1)
    finally:c.disconnect()
  def test_stalled_usb_worker_does_not_block_display_state(self):
   with tempfile.TemporaryDirectory() as directory:
