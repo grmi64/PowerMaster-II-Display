@@ -40,8 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     func launchReader() {
         guard let resources = Bundle.main.resourceURL else { return }
-        let task = Process(); task.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-        var args = [resources.appendingPathComponent("powermaster_web.py").path,"--no-browser","--http-port","51879"]
+        let task = Process(); task.executableURL = resources.appendingPathComponent("meter-reader/meter-reader")
+        var args = ["--no-browser","--http-port","51879"]
         if CommandLine.arguments.contains("--demo") { args.append("--demo") }
         task.arguments = args
         task.environment = ProcessInfo.processInfo.environment.merging(["PYTHONDONTWRITEBYTECODE":"1","PYTHONUNBUFFERED":"1"]) { _,new in new }
@@ -61,7 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         task.terminationHandler = { [weak self] p in
             if p.terminationStatus != 0 {
-                DispatchQueue.main.async { self?.showError("The meter reader stopped. This local build requires Apple's /usr/bin/python3 and its Command Line Tools. Exit any older meter reader before opening this app.") }
+                DispatchQueue.main.async { self?.showError("The meter reader stopped. Exit any older meter reader before opening this app. If the problem persists, check the app diagnostics.") }
             }
         }
         do { try task.run(); process = task }

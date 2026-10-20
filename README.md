@@ -2,16 +2,16 @@
 
 Independent macOS station meter app. Bundle identifier: `com.grmi64.PowerMasterIIDisplay`.
 
-## Local prototype 0.2.0 — build 3
+## Local prototype 0.3.0 — build 4
 
 Native macOS window containing the LED display, with a local Python USB reader.
 Quit the earlier Terminal reader before launching the app. Quit this app with Command-Q or close its window; the child reader exits with it. Reopening the app activates the existing window. A process lock also prevents concurrent instances from opening the meter.
 
-**This build requires `/usr/bin/python3` and Apple Command Line Tools on the Mac. It is not yet a self-contained release for testers.** It has an ad-hoc signature, not Developer ID signing or notarization. No installer or DX Caliber integration is included yet.
+**Build 4 bundles its Python reader and runtime; users do not need Python or Command Line Tools. Clean-Mac verification is still pending.** It has an ad-hoc signature, not Developer ID signing or notarization. No installer or DX Caliber integration is included yet.
 
 ## Build
 
-Run `bash scripts/build.sh` on macOS with Swift Command Line Tools. Output: `dist/PowerMaster II Display.app`. The build targets the compiling Mac's architecture. `Contents/MacOS/PowerMasterIIDisplay --demo` runs with simulated measurements.
+Install PyInstaller 6.22.3 in a Python build environment, then set `PM_BUILD_PYTHON` to that environment's Python and run `bash scripts/build.sh` on macOS with Swift Command Line Tools. Output: `dist/PowerMaster II Display.app`. The build targets the compiling Mac's architecture. `Contents/MacOS/PowerMasterIIDisplay --demo` runs with simulated measurements.
 
 ## Connection
 
@@ -25,7 +25,7 @@ Source is organized separately from the DX Caliber application and website. No r
 
 ## Release work remaining
 
-Bundle a supported Python runtime or implement the reader natively; add port settings; test clean Macs; build Apple Silicon/Intel artifacts; Developer ID sign and notarize; add optional DX Caliber launch/data integration.
+Test clean Macs; migrate the bundled Python 3.9.6 runtime to a supported Python release before broad distribution; build Apple Silicon/Intel artifacts; Developer ID sign and notarize; add optional DX Caliber launch/data integration.
 
 ## First working baseline
 
@@ -34,3 +34,7 @@ Tag: `v0.1.0-baseline`. Hardware verification on October 19, 2026: user confirme
 Build 2 corrects handling of empty nonblocking serial reads and sets VMIN to 1. Parser/CRC checks and a simulated alternating-empty-read regression check passed. Native single-instance activation and clean-Mac distribution remain unverified.
 
 Build 3 validation: simulated connection control, persistence across restart, invalid baud and unauthorized control requests, parser/CRC checks passed. GUI layout inspected in demo mode. Hardware connection controls and native second-launch activation still require operator verification.
+
+Operator verified build 3 on October 19, 2026: selected port and connected, quit/relaunched with settings restored and rapid reconnect, second launch brought existing window forward without another instance.
+
+Build 4: frozen reader and Python runtime bundled with PyInstaller. Demo page/data/shutdown verified with PATH excluding Python. Ad-hoc signature verified. Developer ID signing attempt failed to obtain Apple trusted timestamp; notarization was not submitted. Distribution remains pending.
