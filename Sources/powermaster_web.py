@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Local PowerMaster II display and connection controller."""
+import multiprocessing
 import argparse
 import glob
 import json
@@ -31,13 +32,15 @@ class Controller:
         if self.port or self.demo:self.connect(self.port,self.baud,save=False)
 
     def reset(self):
-        self.events=queue.Queue();self.last=None
+        self.events=multiprocessing.Queue();self.last=None
         self.state=dict(status='Disconnected',values=[0,0,0],notice='',frames=0,crc_failures=0,malformed=0,port=self.port,baud=self.baud,demo=self.demo,checksum='—',payload='—',status_fields='—')
 
     def disconnect(self):
         if self.worker:
             self.worker.stop_event.set();self.worker.join(timeout=2)
-            if self.worker.is_alive():raise RuntimeError('Reader is still closing; try again shortly.')
+            if self.worker.is_alive():
+                self.worker.terminate();self.worker.join(timeout=1)
+                if self.worker.is_alive():raise RuntimeError('USB driver is not responding. Unplug the meter USB cable and try again.')
             self.worker=None
         self.reset()
 
@@ -138,4 +141,6 @@ def main():
     try:server.serve_forever(poll_interval=.2)
     except KeyboardInterrupt:pass
     finally:server.server_close();controller.disconnect()
-if __name__=='__main__':main()
+if __name__=='__main__':
+    multiprocessing.freeze_support()
+    main()

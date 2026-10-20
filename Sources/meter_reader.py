@@ -1,11 +1,11 @@
-import queue, threading, time, math, select
+import queue, multiprocessing, time, math, select
 from powermaster_diagnostic import Link, Parser
 
-class Reader(threading.Thread):
+class Reader(multiprocessing.Process):
     def __init__(self, port, events, demo=False, baud=38400):
         super().__init__(daemon=True)
         self.port, self.events, self.demo = port, events, demo
-        self.stop_event = threading.Event()
+        self.stop_event = multiprocessing.Event()
         self.baud = baud
 
     def emit(self, kind, value):
