@@ -62,3 +62,7 @@ back to the current live reading. These display controls do not change the meter
 it visible above other applications. It works in the Mac app. Appearance, scales,
 peak options and compact/top choices save automatically. All views use one reader
 and the same shared telemetry; DX Caliber/CAT timing is independent.
+
+## PowerMaster II 0.5.1 beta
+
+New instrument icon with blue horizontal power bar and waveform, plus appearance profiles, peak hold/reset, adjustable scales and compact stay-on-top view. Separate signed/notarized meter-only DMG is published in the beta area. The combined DX Caliber installer remains on meter 0.4.4. See RELEASE-0.5.1.md for checksums, notarization and validation.
