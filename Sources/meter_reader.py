@@ -33,7 +33,7 @@ class Reader(threading.Thread):
                 if self.demo:
                     active = int(time.monotonic()-started) % 12 < 8
                     fwd = 25 + math.sin(time.monotonic()) if active else 0
-                    self.emit('reading', ((fwd,.15,1.17) if active else (0,0,0), '0;0;0;0;0', '--', 'SIMULATION', count, 0, 0))
+                    self.emit('reading', ((fwd,.15,1.17) if active else (0,0,0), '0;0;0;0;0', '--', 'SIMULATION', count, 0, 0, time.monotonic()))
                     count += 1
                     self.stop_event.wait(.2)
                     continue
@@ -59,7 +59,7 @@ class Reader(threading.Thread):
                                 else:
                                     last = time.monotonic()
                                     count += 1
-                                    self.emit('reading',(values,flags,crc,raw,count,parser.bad,parser.crc_bad))
+                                    self.emit('reading',(values,flags,crc,raw,count,parser.bad,parser.crc_bad,time.monotonic()))
                             self.emit('counts',(parser.bad,parser.crc_bad))
                         if time.monotonic()-last > 3:
                             raise OSError('No valid readings for 3 seconds')

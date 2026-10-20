@@ -42,3 +42,11 @@ Build 4: frozen reader and Python runtime bundled with PyInstaller. Demo page/da
 ## Sign and notarize
 
 After building, run `bash scripts/notarize.sh` in a Terminal with access to the configured Developer ID private key and the `DXCaliber-notary` Keychain profile. The script signs a release copy inside out, submits to Apple, requires Accepted status, staples and validates the ticket, and verifies the signature and Gatekeeper assessment. Output: `release/PowerMaster-II-Display-0.3.0-notarized.zip`. Credentials and generated release artifacts are not committed.
+
+## 0.4.0 integration preview
+
+Meter connection includes **Share readings with DX Caliber on this Mac**, off by default and saved with connection settings. DX Caliber must separately enable reception. A versioned read-only loopback feed provides meter readings with original sample age; stale/disconnected values are null. Closing DX Caliber does not stop the meter.
+
+Run `bash scripts/package_station_suite.sh` to sign/notarize the built meter and sibling DX Caliber DEV app, then create both combined and meter-only DMGs. An optional app path overrides the default sibling. `--preview` builds ad-hoc development DMGs without Apple submission. This session's DiskManagement restrictions prevented image creation; use normal Terminal with the existing Developer ID and DXCaliber-notary profile.
+
+Integration demo tests passed; live hardware feed and final combined DMGs need operator verification. The 0.3.0 notarized release and tag remain unchanged.
