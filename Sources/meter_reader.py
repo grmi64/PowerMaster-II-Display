@@ -46,11 +46,12 @@ class Reader(multiprocessing.Process):
                         ready,_,_ = select.select([link.fd],[],[],.1)
                         if ready:
                             import os
-                            data = os.read(link.fd,4096)
+                            try:data = os.read(link.fd,4096)
+                            except (BlockingIOError,InterruptedError):
+                                self.stop_event.wait(.02)
+                                continue
                             if not data:
                                 # Empty nonblocking reads are not proof of USB removal.
-                                if time.monotonic() - last > 3:
-                                    raise OSError('No valid readings for 3 seconds')
                                 self.stop_event.wait(.02)
                                 continue
                             for values, flags, crc, raw in parser.feed(data):
@@ -61,8 +62,6 @@ class Reader(multiprocessing.Process):
                                     count += 1
                                     self.emit('reading',(values,flags,crc,raw,count,parser.bad,parser.crc_bad,time.monotonic()))
                             self.emit('counts',(parser.bad,parser.crc_bad))
-                        if time.monotonic()-last > 3:
-                            raise OSError('No valid readings for 3 seconds')
                 except Exception as exc:
                     self.emit('status','Reconnecting')
                     self.emit('notice',self.explain(exc))
