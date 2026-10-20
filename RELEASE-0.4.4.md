@@ -17,3 +17,14 @@ visibly LIVE with 0.1 s age. No transmit was commanded by the agent.
 This supersedes the earlier diagnosis attributing all stale indications to USB
 interruptions/slow normal cadence. Live RF transmit confirmation remains with the
 operator. Existing beta website installers are unchanged (meter 0.4.0).
+
+## Published beta packages
+
+Published combined DX Caliber DEV 0.6.59 + PowerMaster II 0.4.4 and standalone
+meter 0.4.4 at https://dxcaliber.com/beta/ (approved tester sign-in required).
+Both DMGs signed, notarized, stapled, Gatekeeper verified and uploaded/downloaded
+checksums matched. Previous packages retained. Installer SHA-256:
+- Combined: cf13500fe933b070151bf7bdd2fb51a9d3ea6238b593d29e44e5c248eb56ce93
+- Meter-only: e11a6fa4acd1fe4d32c2f2516317fe3f9ffaeaed09096cab4bce5e43080eb48e
+Source fixes are checked into feature/dxcaliber-telemetry. This supersedes the
+prior note that beta packages remained at 0.4.0.
