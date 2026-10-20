@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from meter_reader import Reader
 HTML = Path(__file__).with_name('powermaster_ui.html').read_text()
+DISPLAY_JS = Path(__file__).with_name('display.js').read_text()
 BAUDS = (9600,19200,38400)
 
 def ports():
@@ -151,6 +152,7 @@ def main():
                 else:self.reply(controller.telemetry())
                 return
             if self.path=='/'+token+'/':self.reply(HTML.encode(),mime='text/html; charset=utf-8')
+            elif self.path=='/'+token+'/display.js':self.reply(DISPLAY_JS.encode(),mime='text/javascript; charset=utf-8')
             elif self.path=='/'+token+'/state':self.reply(controller.snapshot())
             else:self.send_error(404)
         def do_POST(self):

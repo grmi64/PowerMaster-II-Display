@@ -50,3 +50,15 @@ Meter connection includes **Share readings with DX Caliber on this Mac**, off by
 Run `bash scripts/package_station_suite.sh` to sign/notarize the built meter and sibling DX Caliber DEV app, then create both combined and meter-only DMGs. An optional app path overrides the default sibling. `--preview` builds ad-hoc development DMGs without Apple submission. This session's DiskManagement restrictions prevented image creation; use normal Terminal with the existing Developer ID and DXCaliber-notary profile.
 
 Integration demo tests passed; live hardware feed and final combined DMGs need operator verification. The 0.3.0 notarized release and tag remain unchanged.
+
+## Display profiles and compact mode (0.5.0)
+
+Choose **Display settings** for Modern, Console (horizontal color bars), or
+Daylight. Set the forward/reflected scales independently to Auto or a fixed watt
+range; choose timed peak hold or Until reset. **Reset peak** clears the held peak
+back to the current live reading. These display controls do not change the meter.
+
+**Compact** shrinks the same window; **Expand** restores it. **Stay on top** keeps
+it visible above other applications. It works in the Mac app. Appearance, scales,
+peak options and compact/top choices save automatically. All views use one reader
+and the same shared telemetry; DX Caliber/CAT timing is independent.

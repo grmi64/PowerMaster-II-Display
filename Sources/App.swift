@@ -2,12 +2,15 @@ import Cocoa
 import WebKit
 import Darwin
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKScriptMessageHandler {
     var window: NSWindow!
     var web: WKWebView!
     var process: Process?
     var output = Data()
     var lockFD: Int32 = -1
+    var shuttingDown = false
+    var fullFrame: NSRect?
+    var compact = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A second launch activates the first app and never opens the USB port.
         let identifier = Bundle.main.bundleIdentifier ?? "com.grmi64.PowerMasterIIDisplay"
@@ -31,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.center(); window.delegate = self
         window.setFrameAutosaveName("PowerMasterMainWindow")
         let config = WKWebViewConfiguration()
+        config.userContentController.add(self, name: "displayWindow")
         let webData = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent(identifier)
         try? FileManager.default.createDirectory(at: webData, withIntermediateDirectories: true)
         web = WKWebView(frame: window.contentView!.bounds, configuration: config)
@@ -61,16 +65,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         task.terminationHandler = { [weak self] p in
             if p.terminationStatus != 0 {
-                DispatchQueue.main.async { self?.showError("The meter reader stopped. Exit any older meter reader before opening this app. If the problem persists, check the app diagnostics.") }
+                DispatchQueue.main.async { guard let self = self, !self.shuttingDown else { return }; self.showError("The meter reader stopped. Exit any older meter reader before opening this app. If the problem persists, check the app diagnostics.") }
             }
         }
         do { try task.run(); process = task }
         catch { showError("Could not start Python reader: \(error.localizedDescription)") }
     }
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "displayWindow", let options = message.body as? [String:Any],
+              let small = options["compact"] as? Bool, let onTop = options["alwaysOnTop"] as? Bool else { return }
+        window.level = onTop ? .floating : .normal
+        window.title = "PowerMaster II Display" + (small ? " · Compact" : "") + (onTop ? " · On top" : "")
+        if small != compact {
+            if small {
+                if window.frame.height >= 650 {
+                    fullFrame = window.frame
+                    UserDefaults.standard.set(NSStringFromRect(window.frame), forKey: "PowerMasterFullFrame")
+                } else if let stored = UserDefaults.standard.string(forKey: "PowerMasterFullFrame") {
+                    fullFrame = NSRectFromString(stored)
+                }
+                window.minSize = NSSize(width: 600, height: 340)
+                window.setContentSize(NSSize(width: 700, height: 350))
+            } else {
+                window.minSize = NSSize(width: 650, height: 650)
+                if let frame = fullFrame { window.setFrame(frame, display: true) }
+                else { window.setContentSize(NSSize(width: 940, height: 850)) }
+            }
+            compact = small
+        }
+    }
     func showError(_ message:String) { let alert=NSAlert();alert.messageText="PowerMaster II Display";alert.informativeText=message;alert.runModal() }
     func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool)->Bool { window?.makeKeyAndOrderFront(nil);return true }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender:NSApplication)->Bool { true }
-    func applicationWillTerminate(_ notification:Notification) { if let p=process,p.isRunning {p.terminate();p.waitUntilExit()} }
+    func applicationWillTerminate(_ notification:Notification) { shuttingDown = true; if let p=process,p.isRunning {p.terminationHandler = nil;p.terminate();p.waitUntilExit()} }
 }
 let app=NSApplication.shared
 let delegate=AppDelegate()

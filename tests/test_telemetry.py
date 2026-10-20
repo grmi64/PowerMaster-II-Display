@@ -60,6 +60,8 @@ class TelemetryTests(unittest.TestCase):
    p=subprocess.Popen([sys.executable,str(source),'--demo','--no-browser','--settings',directory+'/settings.json'],stdout=subprocess.PIPE,text=True)
    try:
     url=p.stdout.readline().strip().split('display: ')[1];base=url.rsplit('/',2)[0];token=url.strip('/').split('/')[-1]
+    with urllib.request.urlopen(url+'display.js') as asset:
+     self.assertIn('javascript',asset.headers['Content-Type']);self.assertIn('class DisplayModel',asset.read().decode())
     with self.assertRaises(urllib.error.HTTPError) as error:urllib.request.urlopen(base+'/api/v1/telemetry')
     self.assertEqual(error.exception.code,403)
     def share(enabled):
