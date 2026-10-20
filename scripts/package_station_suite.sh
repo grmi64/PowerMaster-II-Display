@@ -8,6 +8,8 @@ DX_SOURCE="${1:-$PWD/../DX-Caliber/DX Caliber DEV.app}"
 METER_SOURCE="$PWD/dist/PowerMaster II Display.app"
 IDENTITY='Developer ID Application: Greg Miller (5DD7E8D68A)'
 PROFILE='DXCaliber-notary'
+DX_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$DX_SOURCE/Contents/Info.plist")
+METER_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$METER_SOURCE/Contents/Info.plist")
 OUT="$PWD/release/station-suite"
 mkdir -p "$OUT"
 STAGE="$(mktemp -d "$OUT/stage.XXXXXX")"
@@ -55,7 +57,7 @@ The meter display works independently. Closing DX Caliber does not stop it. DX C
 This package contains a DEV build of DX Caliber, not a production upgrade. Meter app is Apple Silicon only. True PEP is not implemented; peak hold is based on received samples.
 TXT
 cat > "$STAGE/meter/Read Me.txt" <<'TXT'
-PowerMaster II Display 0.4.0 (Apple Silicon)
+PowerMaster II Display (Apple Silicon)
 
 Quit older copies. Drag PowerMaster II Display to Applications, launch it, choose the USB port and matching baud, and connect.
 
@@ -68,8 +70,8 @@ if $PREVIEW; then
   printf '\nUNNOTARIZED DEVELOPMENT PREVIEW. Do not distribute as a signed release.\n' >> "$STAGE/$target/Read Me.txt"
  done
 fi
-COMBINED="$OUT/DX-Caliber-DEV-0.6.59-PowerMaster-II-0.4.0-arm64${SUFFIX}.dmg"
-METER="$OUT/PowerMaster-II-Display-0.4.0-arm64${SUFFIX}.dmg"
+COMBINED="$OUT/DX-Caliber-DEV-${DX_VERSION}-PowerMaster-II-${METER_VERSION}-arm64${SUFFIX}.dmg"
+METER="$OUT/PowerMaster-II-Display-${METER_VERSION}-arm64${SUFFIX}.dmg"
 for kind in combined meter; do
   if [[ "$kind" == combined ]]; then image="$COMBINED"; volume='DX Caliber + PowerMaster II'; else image="$METER"; volume='PowerMaster II Display'; fi
   hdiutil create -ov -volname "$volume" -srcfolder "$STAGE/$kind" -format UDZO "$image"
