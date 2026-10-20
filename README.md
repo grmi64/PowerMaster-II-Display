@@ -2,12 +2,12 @@
 
 Independent macOS station meter app. Bundle identifier: `com.grmi64.PowerMasterIIDisplay`.
 
-## Local prototype 0.3.0 — build 4
+## Version 0.3.0 — build 4
 
 Native macOS window containing the LED display, with a local Python USB reader.
 Quit the earlier Terminal reader before launching the app. Quit this app with Command-Q or close its window; the child reader exits with it. Reopening the app activates the existing window. A process lock also prevents concurrent instances from opening the meter.
 
-**Build 4 bundles its Python reader and runtime; users do not need Python or Command Line Tools. Clean-Mac verification is still pending.** It has an ad-hoc signature, not Developer ID signing or notarization. No installer or DX Caliber integration is included yet.
+**The release bundles its Python reader and runtime; users do not need Python or Command Line Tools.** The release copy is Developer ID signed, notarized, and stapled. The operator confirmed clean-Mac testing and live hardware operation of the notarized app. No DMG installer or DX Caliber integration is included yet.
 
 ## Build
 
@@ -19,22 +19,26 @@ Use Meter connection to select a USB serial port and 9600, 19200, or 38400 baud.
 
 Verified stream command: `02 44 33 03 31 33 0D`. CRC inferred from captured hardware frames: MSB-first polynomial B1, init 00, xor FF, payload only. Extra status fields and stop-stream command remain unverified. Peak hold is sampled maximum, not true PEP.
 
-## GitHub preparation
+## Repository
 
-Source is organized separately from the DX Caliber application and website. No remote or publishing has been configured. Recommended next step: a separate private repository. Select a license before public distribution.
+Private repository: https://github.com/grmi64/PowerMaster-II-Display. Source is separate from the DX Caliber application and website. Select a license before public distribution.
 
 ## Release work remaining
 
-Test clean Macs; migrate the bundled Python 3.9.6 runtime to a supported Python release before broad distribution; build Apple Silicon/Intel artifacts; Developer ID sign and notarize; add optional DX Caliber launch/data integration.
+Migrate the bundled Python 3.9.6 runtime to a supported Python release before broad distribution; broaden compatibility testing and build Intel artifacts; add optional DX Caliber launch/data integration.
 
 ## First working baseline
 
 Tag: `v0.1.0-baseline`. Hardware verification on October 19, 2026: user confirmed native app remains connected and resumes live measurements after USB unplug/replug. Forward/reflected watts and SWR were compared with the meter front panel earlier in this session.
 
-Build 2 corrects handling of empty nonblocking serial reads and sets VMIN to 1. Parser/CRC checks and a simulated alternating-empty-read regression check passed. Native single-instance activation and clean-Mac distribution remain unverified.
+Build 2 corrects handling of empty nonblocking serial reads and sets VMIN to 1. Parser/CRC checks and a simulated alternating-empty-read regression check passed. These later passed operator checks as recorded below.
 
-Build 3 validation: simulated connection control, persistence across restart, invalid baud and unauthorized control requests, parser/CRC checks passed. GUI layout inspected in demo mode. Hardware connection controls and native second-launch activation still require operator verification.
+Build 3 validation: simulated connection control, persistence across restart, invalid baud and unauthorized control requests, parser/CRC checks passed. GUI layout inspected in demo mode. Hardware checks subsequently passed as recorded below.
 
 Operator verified build 3 on October 19, 2026: selected port and connected, quit/relaunched with settings restored and rapid reconnect, second launch brought existing window forward without another instance.
 
-Build 4: frozen reader and Python runtime bundled with PyInstaller. Demo page/data/shutdown verified with PATH excluding Python. Ad-hoc signature verified. Developer ID signing attempt failed to obtain Apple trusted timestamp; notarization was not submitted. Distribution remains pending.
+Build 4: frozen reader and Python runtime bundled with PyInstaller. Demo page/data/shutdown verified with PATH excluding Python. Operator confirmed clean-Mac operation, then completed signing/notarization in Terminal and verified the notarized app against live hardware. See RELEASE-0.3.0.md.
+
+## Sign and notarize
+
+After building, run `bash scripts/notarize.sh` in a Terminal with access to the configured Developer ID private key and the `DXCaliber-notary` Keychain profile. The script signs a release copy inside out, submits to Apple, requires Accepted status, staples and validates the ticket, and verifies the signature and Gatekeeper assessment. Output: `release/PowerMaster-II-Display-0.3.0-notarized.zip`. Credentials and generated release artifacts are not committed.
