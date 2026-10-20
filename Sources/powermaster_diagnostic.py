@@ -6,6 +6,7 @@ Only transmits the hardware-tested D3 stream command. No settings writes.
 Checksums validated using CRC inferred from captured frames. Hardware streaming may continue
 when this program exits; a stop command has not yet been verified.
 """
+from port_lock import PortLock,exclusive
 import argparse
 import curses
 import math
@@ -30,6 +31,7 @@ class Link:
     def __init__(self, port, baud=38400):
         self.port, self.fd, self.old = port, None, None
         self.baud = baud
+        self.port_lock = PortLock(port)
 
     def close(self):
         if self.fd is not None:
@@ -41,10 +43,14 @@ class Link:
             finally:
                 os.close(self.fd)
                 self.fd, self.old = None, None
+        self.port_lock.release()
 
     def connect(self):
-        self.fd = os.open(self.port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+        self.port_lock.acquire()
         try:
+            self.fd = os.open(self.port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+            exclusive(self.fd)
+            self.port_lock.check_owners()
             self.old = termios.tcgetattr(self.fd)
             a = termios.tcgetattr(self.fd)
             a[0] = a[1] = a[3] = 0
