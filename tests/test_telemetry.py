@@ -2,7 +2,7 @@ import json,pathlib,subprocess,sys,tempfile,time,unittest,urllib.request,urllib.
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/'Sources'))
 from powermaster_web import Controller
 from meter_reader import Reader
-from unittest.mock import patch
+from unittest.mock import patch,Mock
 
 class StalledReader(Reader):
  def run(self):time.sleep(60)
@@ -22,6 +22,17 @@ class TelemetryTests(unittest.TestCase):
    finally:c.disconnect()
    c=Controller(path)
    try:self.assertTrue(c.share_readings)
+   finally:c.disconnect()
+ def test_normal_idle_frame_gap_stays_live_but_stopped_feed_expires(self):
+  with tempfile.TemporaryDirectory() as directory:
+   c=Controller(pathlib.Path(directory)/'settings.json')
+   try:
+    c.worker=Mock();c.worker.is_alive.return_value=False
+    c.state.update(status='Live',values=[0,0,0]);c.last=time.monotonic()-3
+    self.assertEqual(c.telemetry()['status'],'live')
+    c.last=time.monotonic()-6
+    self.assertEqual(c.telemetry()['status'],'stale')
+    self.assertIsNone(c.telemetry()['forward_watts'])
    finally:c.disconnect()
  def test_stalled_usb_worker_does_not_block_display_state(self):
   with tempfile.TemporaryDirectory() as directory:

@@ -73,7 +73,7 @@ class Controller:
     def telemetry(self):
         state=self.snapshot()
         age=state['age']
-        live=state['status']=='Live' and age is not None and age<2
+        live=state['status']=='Live' and age is not None and age<5
         values=state['values']
         return dict(schema_version=1,meter_id='powermaster-ii',model='PowerMaster II',
                     sequence=state['frames'],timestamp=None if age is None else time.time()-age,
