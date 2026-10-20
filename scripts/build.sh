@@ -9,7 +9,7 @@ cp Sources/*.py Sources/*.html "$APP/Contents/Resources/"
 import plistlib,sys
 from pathlib import Path
 p=Path(sys.argv[1])/'Contents'/'Info.plist'
-p.write_bytes(plistlib.dumps(dict(CFBundleIdentifier='com.grmi64.PowerMasterIIDisplay',CFBundleName='PowerMaster II Display',CFBundleDisplayName='PowerMaster II Display',CFBundleExecutable='PowerMasterIIDisplay',CFBundlePackageType='APPL',CFBundleShortVersionString='0.1.0',CFBundleVersion='2',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,NSPrincipalClass='NSApplication')))
+p.write_bytes(plistlib.dumps(dict(CFBundleIdentifier='com.grmi64.PowerMasterIIDisplay',CFBundleName='PowerMaster II Display',CFBundleDisplayName='PowerMaster II Display',CFBundleExecutable='PowerMasterIIDisplay',CFBundlePackageType='APPL',CFBundleShortVersionString='0.2.0',CFBundleVersion='3',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,NSPrincipalClass='NSApplication')))
 PY
 codesign --force --deep --sign - "$APP"
 echo "$APP"

@@ -2,7 +2,7 @@
 
 Independent macOS station meter app. Bundle identifier: `com.grmi64.PowerMasterIIDisplay`.
 
-## Local prototype 0.1.0 — build 2
+## Local prototype 0.2.0 — build 3
 
 Native macOS window containing the LED display, with a local Python USB reader.
 Quit the earlier Terminal reader before launching the app. Quit this app with Command-Q or close its window; the child reader exits with it. Reopening the app activates the existing window. A process lock also prevents concurrent instances from opening the meter.
@@ -15,7 +15,7 @@ Run `bash scripts/build.sh` on macOS with Swift Command Line Tools. Output: `dis
 
 ## Connection
 
-Default USB port: `/dev/cu.usbserial-A400gmxx`, 38400 8N1. Automatic reconnect and stale-data blanking. The browser reader also accepts `--port` for other serial paths; a native connection-settings screen remains to be added. Local HTTP binds only to 127.0.0.1, port 51879 in the native app, with a random URL token per run.
+Use Meter connection to select a USB serial port and 9600, 19200, or 38400 baud. Refresh rescans ports; Connect / Apply saves settings and restarts the reader. Disconnect releases the port. Saved settings are restored on launch; on first launch a sole detected port is selected automatically. Automatic reconnect and stale-data blanking. The browser reader also accepts `--port` for other serial paths; the same connection controls are available in the native window. Local HTTP binds only to 127.0.0.1, port 51879 in the native app, with a random URL token per run.
 
 Verified stream command: `02 44 33 03 31 33 0D`. CRC inferred from captured hardware frames: MSB-first polynomial B1, init 00, xor FF, payload only. Extra status fields and stop-stream command remain unverified. Peak hold is sampled maximum, not true PEP.
 
@@ -32,3 +32,5 @@ Bundle a supported Python runtime or implement the reader natively; add port set
 Tag: `v0.1.0-baseline`. Hardware verification on October 19, 2026: user confirmed native app remains connected and resumes live measurements after USB unplug/replug. Forward/reflected watts and SWR were compared with the meter front panel earlier in this session.
 
 Build 2 corrects handling of empty nonblocking serial reads and sets VMIN to 1. Parser/CRC checks and a simulated alternating-empty-read regression check passed. Native single-instance activation and clean-Mac distribution remain unverified.
+
+Build 3 validation: simulated connection control, persistence across restart, invalid baud and unauthorized control requests, parser/CRC checks passed. GUI layout inspected in demo mode. Hardware connection controls and native second-launch activation still require operator verification.

@@ -27,8 +27,9 @@ def crc8(payload):
 
 
 class Link:
-    def __init__(self, port):
+    def __init__(self, port, baud=38400):
         self.port, self.fd, self.old = port, None, None
+        self.baud = baud
 
     def close(self):
         if self.fd is not None:
@@ -48,7 +49,7 @@ class Link:
             a = termios.tcgetattr(self.fd)
             a[0] = a[1] = a[3] = 0
             a[2] = termios.CS8 | termios.CREAD | termios.CLOCAL
-            a[4] = a[5] = termios.B38400
+            a[4] = a[5] = {9600:termios.B9600,19200:termios.B19200,38400:termios.B38400}[self.baud]
             a[6][termios.VMIN] = 1
             a[6][termios.VTIME] = 0
             termios.tcsetattr(self.fd, termios.TCSANOW, a)

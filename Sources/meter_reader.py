@@ -2,16 +2,29 @@ import queue, threading, time, math, select
 from powermaster_diagnostic import Link, Parser
 
 class Reader(threading.Thread):
-    def __init__(self, port, events, demo=False):
+    def __init__(self, port, events, demo=False, baud=38400):
         super().__init__(daemon=True)
         self.port, self.events, self.demo = port, events, demo
         self.stop_event = threading.Event()
+        self.baud = baud
 
     def emit(self, kind, value):
         self.events.put((kind, value))
 
+    @staticmethod
+    def explain(exc):
+        import errno
+        code = getattr(exc, 'errno', None)
+        if code == errno.ENOENT:
+            return 'Saved USB port is unavailable. Plug in the meter, or refresh and select its port.'
+        if code in (errno.EACCES, errno.EPERM):
+            return 'Access to the serial port was denied. Check macOS permissions and close other meter software.'
+        if code == errno.EBUSY:
+            return 'Serial port is busy. Close the other meter reader and reconnect.'
+        return str(exc)
+
     def run(self):
-        link = Link(self.port)
+        link = Link(self.port, self.baud)
         parser = Parser()
         count = 0
         started = time.monotonic()
@@ -52,7 +65,7 @@ class Reader(threading.Thread):
                             raise OSError('No valid readings for 3 seconds')
                 except Exception as exc:
                     self.emit('status','Reconnecting')
-                    self.emit('notice',str(exc))
+                    self.emit('notice',self.explain(exc))
                 finally:
                     link.close()
                 self.stop_event.wait(2)
