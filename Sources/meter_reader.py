@@ -67,7 +67,7 @@ class Reader(multiprocessing.Process):
                     self.emit('notice',self.explain(exc))
                 finally:
                     link.close()
-                self.stop_event.wait(2)
+                return  # Parent watchdog owns the bounded retry budget.
         finally:
             link.close()
 

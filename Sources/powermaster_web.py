@@ -29,6 +29,7 @@ class Controller:
         self.baud=baud or saved.get('baud',38400)
         if self.baud not in BAUDS:self.baud=38400
         self.reset()
+        self.recovery_attempts=0;self.recovery_due=None;self.stable_since=None;self.attempt_started=time.time()
         if self.port or self.demo:self.connect(self.port,self.baud,save=False)
 
     def reset(self):
@@ -50,6 +51,7 @@ class Controller:
             raise ValueError('Select a valid /dev/cu. serial port.')
         self.disconnect()
         self.port,self.baud=port,baud;self.reset()
+        self.recovery_attempts=0;self.recovery_due=None;self.stable_since=None;self.attempt_started=time.time()
         if save:
             self.save_settings()
         self.worker=Reader(port,self.events,self.demo,baud)
@@ -82,6 +84,37 @@ class Controller:
                     swr=values[2] if live and values[0]>0 and values[2]>=1 else None,
                     measurement='meter_reported',demo=self.demo)
 
+    def recover_if_needed(self):
+        # Meter-only watchdog. No radio/CAT access. Manual Connect resets the budget.
+        if not self.worker or self.demo:return
+        now=time.time();fresh=self.last is not None and now-self.last<2 and self.state['status']=='Live'
+        if fresh:
+            self.recovery_due=None
+            if self.stable_since is None:self.stable_since=now
+            if now-self.stable_since>=30:self.recovery_attempts=0
+            return
+        self.stable_since=None
+        if now-max(self.last or 0,self.attempt_started)<8 and self.worker.is_alive():return
+        if self.recovery_attempts>=3:
+            self.state.update(status='Recovery stopped',notice='Automatic recovery stopped after 3 attempts. Check the meter/USB connection, then click Connect / Apply.')
+            return
+        if self.recovery_due is None:
+            self.recovery_due=now+(2,5,10)[self.recovery_attempts]
+            self.state.update(status='Reconnecting',notice='Reconnecting meter · attempt %d of 3…'%(self.recovery_attempts+1))
+            return
+        if now<self.recovery_due:return
+        self.worker.stop_event.set()
+        if self.worker.is_alive():self.worker.terminate()
+        self.worker.join(timeout=.1)
+        if self.worker.is_alive():
+            self.recovery_attempts=3
+            self.state.update(status='Recovery stopped',notice='USB driver is not responding. Reconnect the meter USB cable, then click Connect / Apply.')
+            return
+        self.events=multiprocessing.Queue()
+        self.recovery_attempts+=1;self.recovery_due=None;self.attempt_started=now
+        self.state.update(status='Reconnecting',notice='Reconnecting meter · attempt %d of 3…'%self.recovery_attempts)
+        self.worker=Reader(self.port,self.events,self.demo,self.baud);self.worker.start()
+
     def snapshot(self):
         for _ in range(1000):
             try:kind,data=self.events.get_nowait()
@@ -93,6 +126,7 @@ class Controller:
             elif kind=='status':self.state['status']=data
             elif kind=='notice':self.state['notice']=data
             elif kind=='counts':self.state.update(malformed=data[0],crc_failures=data[1])
+        self.recover_if_needed()
         return dict(self.state,age=None if self.last is None else max(0,time.time()-self.last),ports=ports(),connected=self.worker is not None,share_readings=self.share_readings)
 
 def main():

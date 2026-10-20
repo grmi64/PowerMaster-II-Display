@@ -13,7 +13,7 @@ ditto /tmp/powermaster-frozen/meter-reader "$APP/Contents/Resources/meter-reader
 import plistlib,sys
 from pathlib import Path
 p=Path(sys.argv[1])/'Contents'/'Info.plist'
-p.write_bytes(plistlib.dumps(dict(CFBundleIdentifier='com.grmi64.PowerMasterIIDisplay',CFBundleName='PowerMaster II Display',CFBundleDisplayName='PowerMaster II Display',CFBundleExecutable='PowerMasterIIDisplay',CFBundlePackageType='APPL',CFBundleShortVersionString='0.4.4',CFBundleVersion='9',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,NSPrincipalClass='NSApplication')))
+p.write_bytes(plistlib.dumps(dict(CFBundleIdentifier='com.grmi64.PowerMasterIIDisplay',CFBundleName='PowerMaster II Display',CFBundleDisplayName='PowerMaster II Display',CFBundleExecutable='PowerMasterIIDisplay',CFBundlePackageType='APPL',CFBundleShortVersionString='0.4.5',CFBundleVersion='10',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,NSPrincipalClass='NSApplication')))
 PY
 mkdir -p "$APP/Contents/Resources/ThirdParty"
 cp ThirdParty/* "$APP/Contents/Resources/ThirdParty/"
