@@ -6,6 +6,7 @@ PROFILE='DXCaliber-notary'
 SOURCE="$PWD/dist/PowerMaster II Display.app"
 RELEASE="$PWD/release"
 APP="$RELEASE/PowerMaster II Display.app"
+VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$SOURCE/Contents/Info.plist")
 mkdir -p "$RELEASE"
 if [[ ! -d "$SOURCE" ]]; then
   echo "Missing built app: $SOURCE" >&2
@@ -31,7 +32,7 @@ for p in sorted(root.rglob('*.framework'),key=lambda p:len(p.parts),reverse=True
 sign(root)
 PY
 codesign --verify --deep --strict --verbose=2 "$APP"
-ZIP="$RELEASE/PowerMaster-II-Display-0.4.0-notarization.zip"
+ZIP="$RELEASE/PowerMaster-II-Display-$VERSION-notarization.zip"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
 xcrun notarytool submit "$ZIP" --keychain-profile "$PROFILE" --wait --output-format json > "$RELEASE/notarization-result.json"
 cat "$RELEASE/notarization-result.json"
@@ -45,6 +46,6 @@ xcrun stapler staple "$APP"
 xcrun stapler validate "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 spctl --assess --type execute --verbose=2 "$APP"
-FINAL="$RELEASE/PowerMaster-II-Display-0.4.0-notarized.zip"
+FINAL="$RELEASE/PowerMaster-II-Display-$VERSION-notarized.zip"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$FINAL"
 echo "Completed: $FINAL"

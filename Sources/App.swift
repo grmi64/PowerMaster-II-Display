@@ -25,6 +25,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKSc
         guard lockFD >= 0, flock(lockFD, LOCK_EX | LOCK_NB) == 0 else { NSApp.terminate(nil); return }
         let menu = NSMenu()
         let appMenu = NSMenu()
+        let about = appMenu.addItem(withTitle: "About PowerMaster II Display…", action: #selector(showAbout(_:)), keyEquivalent: "")
+        about.target = self
+        appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Quit PowerMaster II Display", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let item = NSMenuItem(); item.submenu = appMenu; menu.addItem(item)
         NSApp.mainMenu = menu
@@ -33,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKSc
         window.minSize = NSSize(width: 650,height: 650)
         window.center(); window.delegate = self
         window.setFrameAutosaveName("PowerMasterMainWindow")
+        ensureWindowVisible()
+        NotificationCenter.default.addObserver(self, selector: #selector(recoverForScreenChange(_:)), name: NSApplication.didChangeScreenParametersNotification, object: nil)
         let config = WKWebViewConfiguration()
         config.userContentController.add(self, name: "displayWindow")
         let webData = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent(identifier)
@@ -41,6 +46,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKSc
         web.autoresizingMask = [.width,.height]; window.contentView!.addSubview(web)
         window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         launchReader()
+    }
+    @objc func showAbout(_ sender: Any?) {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .applicationName: "PowerMaster II Display", .applicationVersion: version, .version: "Build " + build,
+            .credits: NSAttributedString(string: "Created by NY6C\nIndependent PowerMaster II meter display."),
+            .init(rawValue: "Copyright"): "© 2026 NY6C"
+        ])
+        NSApp.activate(ignoringOtherApps: true)
     }
     func launchReader() {
         guard let resources = Bundle.main.resourceURL else { return }
@@ -92,15 +107,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKSc
                 else { window.setContentSize(NSSize(width: 940, height: 850)) }
             }
             compact = small
+            ensureWindowVisible()
         }
     }
-    func showError(_ message:String) { let alert=NSAlert();alert.messageText="PowerMaster II Display";alert.informativeText=message;alert.runModal() }
-    func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool)->Bool { window?.makeKeyAndOrderFront(nil);return true }
+    func ensureWindowVisible() {
+        guard let window = window, !window.styleMask.contains(.fullScreen) else { return }
+        let old = window.frame
+        let frame = WindowPlacement.recover(old, screens: NSScreen.screens.map { $0.visibleFrame })
+        if frame != old {
+            window.minSize = NSSize(width:min(window.minSize.width,frame.width),height:min(window.minSize.height,frame.height))
+            window.setFrame(frame, display:true)
+        }
+    }
+    @objc func recoverForScreenChange(_ notification: Notification) { ensureWindowVisible() }
+    func applicationDidBecomeActive(_ notification: Notification) { ensureWindowVisible() }
+    func showError(_ message:String) {
+        let alert=NSAlert();alert.messageText="PowerMaster II Display";alert.informativeText=message
+        ensureWindowVisible()
+        if let window = window, window.isVisible { alert.beginSheetModal(for:window) }
+        else { alert.runModal() }
+    }
+    func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool)->Bool { ensureWindowVisible();window?.makeKeyAndOrderFront(nil);return true }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender:NSApplication)->Bool { true }
     func applicationWillTerminate(_ notification:Notification) { shuttingDown = true; if let p=process,p.isRunning {p.terminationHandler = nil;p.terminate();p.waitUntilExit()} }
 }
-let app=NSApplication.shared
-let delegate=AppDelegate()
-app.delegate=delegate
-app.setActivationPolicy(.regular)
-app.run()
+@main
+struct InstrumentApplication {
+    static func main() {
+        let app=NSApplication.shared
+        let delegate=AppDelegate()
+        app.delegate=delegate
+        app.setActivationPolicy(.regular)
+        app.run()
+    }
+}

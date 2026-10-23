@@ -46,7 +46,7 @@ function applyPrefs(){
  for(const id of ['profile','scale','refScale','hold','callsign','warn','alarm'])$(id).value=prefs[id];
  $('stayTop').checked=prefs.top;$('stayTop').disabled=!native;$('stayTopLabel').title=native?'Keep this window above other applications':'Stay on top is available in the Mac app';
  $('compact').textContent=prefs.compact?'Expand':'Compact';$('compact').setAttribute('aria-pressed',String(prefs.compact));
- $('stationLabel').textContent=prefs.callsign||'RF power & standing wave ratio';
+ $('stationLabel').textContent='RF power & standing wave ratio';$('operatorCallsign').textContent=prefs.callsign;$('operatorCallsign').hidden=!prefs.callsign;
  native?.postMessage({compact:prefs.compact,alwaysOnTop:prefs.top});
  if(lastData)paint(lastData);
 }
